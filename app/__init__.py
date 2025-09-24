@@ -1,11 +1,16 @@
 # @description: 
 # @author: licanglong
 # @date: 2025/9/24 14:04
+
+ENV = {}
+
+
 def init_app():  # noqa
-    from .configs import init_config
+    from .configs import init_env, ConfigDict
+    global ENV
 
     # 初始化配置文件
-    init_config()
+    ENV: ConfigDict = init_env()
 
     from .logs import init_logger
 

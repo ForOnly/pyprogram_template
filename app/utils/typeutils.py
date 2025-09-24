@@ -34,13 +34,14 @@ def as_dataclass(cls: Type[T], data, ignore_case: bool = True) -> T:
     # 自定义类型转换注册表
     type_registry = {}
 
-    def register_type_converter(type_cls, converter_func):
-        """注册自定义类型转换器
-        注册某类型的自定义转换函数。
-        示例：
-            as_dataclass.register_type_converter(Color, lambda v: Color(v))
+    def register_type_converter(from_type, to_type, converter_func):
         """
-        type_registry[type_cls] = converter_func
+        注册自定义类型转换器
+        示例：
+            as_dataclass.register_type_converter(str, int, lambda v: int(v))
+            as_dataclass.register_type_converter(Color, str, lambda v: v.hex)
+        """
+        type_registry[(to_type, from_type)] = converter_func
 
     def _get_fields(c):
         """获取 dataclass 字段并缓存"""
@@ -56,12 +57,17 @@ def as_dataclass(cls: Type[T], data, ignore_case: bool = True) -> T:
         if value is None:
             return None
 
-        # 优先使用自定义注册类型转换器
-        if field_type in type_registry:
+        # 如果已经是目标类型，直接返回
+        if isinstance(value, field_type):
+            return value
+
+        # 尝试匹配 (目标类型, 输入类型)
+        converter = type_registry.get((field_type, type(value)))
+        if converter:
             try:
-                return type_registry[field_type](value)
+                return converter(value)
             except Exception as e:
-                raise TypeError(f"{path}: custom converter for {field_type} failed: {e}")
+                raise TypeError(f"{path}: converter for {type(value)} -> {field_type} failed: {e}")
 
         # Union 类型处理
         if origin is Union:
@@ -194,9 +200,6 @@ def as_dataclass(cls: Type[T], data, ignore_case: bool = True) -> T:
 
         return cls_inner(**kwargs)
 
-    # 暴露注册接口
-    as_dataclass.register_type_converter = register_type_converter
-
     def _str_to_int(v):
         """str -> int，不能转换时抛异常"""
         if v is None:
@@ -206,18 +209,13 @@ def as_dataclass(cls: Type[T], data, ignore_case: bool = True) -> T:
         except Exception:
             raise ValueError(f"Cannot convert value '{v}' to int")
 
-    def _int_to_str(v):
-        """int -> str，不能转换时抛异常（通常安全，但保持一致）"""
-        if v is None:
-            return None
-        try:
-            return str(v)
-        except Exception:
-            raise ValueError(f"Cannot convert value '{v}' to str")
+    # 暴露注册接口
+    as_dataclass.register_type_converter = register_type_converter
 
     # 注册
-    register_type_converter(int, _str_to_int)
-    register_type_converter(str, _int_to_str)
+    register_type_converter(str, int, _str_to_int)
+    register_type_converter(int, str, lambda v: str(v))
+    register_type_converter(float, int, lambda v: round(v))
 
     # 执行转换
     return _as_dataclass(cls, data)

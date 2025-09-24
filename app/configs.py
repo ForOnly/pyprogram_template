@@ -91,18 +91,14 @@ def getpath(path: str) -> str:
     return abs_path
 
 
-DEFAULT_CONFIG_FILE = "config/config.yml"
-INIT_CONFIG: ConfigDict = ConfigDict({})
-
-
-def init_config():
+def init_env(default_config="env/env.yml", extract=True):
     """加载并初始化"""
 
     # 初始配置文件
-    global INIT_CONFIG
-    config_path = getpath(DEFAULT_CONFIG_FILE)
-    if getattr(sys, 'frozen', False):
-        extract_config_path = os.path.join(os.path.dirname(sys.executable), DEFAULT_CONFIG_FILE)
+    env: ConfigDict = ConfigDict({})
+    config_path = getpath(default_config)
+    if getattr(sys, 'frozen', False) and extract:
+        extract_config_path = os.path.join(os.path.dirname(sys.executable), default_config)
         if not os.path.exists(config_path):
             return
         # 如果文件不存在，解压并复制到当前工作目录
@@ -114,4 +110,5 @@ def init_config():
         config_path = extract_config_path
 
     with open(config_path, 'r', encoding='utf-8') as ymlfile:
-        INIT_CONFIG.update(yaml.safe_load(ymlfile) or {})
+        env.update(yaml.safe_load(ymlfile) or {})
+    return env
