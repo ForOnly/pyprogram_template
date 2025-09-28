@@ -2,10 +2,7 @@
 # @author: licanglong
 # @date: 2025/5/8 16:33
 import logging
-import os
 import sys
-
-from concurrent_log import ConcurrentTimedRotatingFileHandler
 
 
 class ColorConsoleFormatter(logging.Formatter):
@@ -46,37 +43,15 @@ class ColorConsoleFormatter(logging.Formatter):
         formatter = self._formatters.get(record.levelno, self._formatters[logging.INFO])
         return formatter.format(record)
 
-    # def format(self, record):
-    #     log_fmt = self.FORMATS.get(record.levelno)
-    #     formatter = logging.Formatter(log_fmt, datefmt='%Y-%m-%d %H:%M:%S')
-    #     return formatter.format(record)
 
-
-def init_logger(filename='app.log'):
-    from .configs import INIT_CONFIG
-
-    custom_stream_handler = logging.StreamHandler()
-    if getattr(sys, 'frozen', False):  # 打包后的环境
-        log_dir = os.path.join(os.path.dirname(sys.executable), 'logs')
-    else:  # 开发环境
-        custom_stream_handler.setFormatter(ColorConsoleFormatter())
-        log_dir = os.path.join(os.getenv('APP_PATH'), 'logs')
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir, exist_ok=True)
-    log_path = os.path.join(log_dir, filename)
-
-    file_handler = ConcurrentTimedRotatingFileHandler(
-        filename=log_path,
-        when='midnight',  # 每天午夜切割
-        backupCount=30,  # 保留最近30天的日志
-        encoding='utf-8',
-    )
-
-    # 确保日志路径
-    logging.basicConfig(
-        level=INIT_CONFIG['general']['log_level'],
-        format="{asctime} {levelname:>7} {threadName:^10} [{filename}#{funcName}:{lineno}]: {message}",
-        style="{",
-        encoding='utf-8',
-        handlers=[file_handler, custom_stream_handler]
-    )
+custom_stream_handler = logging.StreamHandler()
+if not getattr(sys, 'frozen', False):  # 开发环境
+    custom_stream_handler.setFormatter(ColorConsoleFormatter())
+# 确保日志路径
+logging.basicConfig(
+    level=logging.INFO,
+    format="{asctime} {levelname:>7} {threadName:^10} [{filename}#{funcName}:{lineno}]: {message}",
+    style="{",
+    encoding='utf-8',
+    handlers=[custom_stream_handler]
+)
