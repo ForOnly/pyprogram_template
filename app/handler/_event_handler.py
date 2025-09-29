@@ -1,13 +1,40 @@
 # @description: 
 # @author: licanglong
-# @date: 2025/9/28 9:14
+# @date: 2025/9/29 10:37
 import logging
 import threading
+import time
 from collections import defaultdict
-from typing import Dict, Type, List, Callable, Optional
+from typing import Any, Dict, Type, List, Callable, Optional
 
-from ._event import Event
-from ._subscriber import Subscriber
+
+class Event:
+    """事件基类，支持携带任意数据"""
+
+    def __init__(self, source: Any = None, tags: Optional[List[str]] = None):
+        self.source = source
+        self.tags = tags or []
+        self.timestamp = time.time()
+
+
+class Subscriber:
+    """
+    # ---------------------------
+    # 订阅者信息
+    # ---------------------------
+    """
+
+    def __init__(self, callback: Callable, event_type: Type[Event],
+                 condition: Optional[Callable[[Event], bool]] = None,
+                 priority: int = 0,
+                 async_: bool = False,
+                 once: bool = False):
+        self.callback = callback
+        self.event_type = event_type
+        self.condition = condition
+        self.priority = priority
+        self.async_ = async_
+        self.once = once
 
 
 class EventBus:
@@ -111,3 +138,18 @@ class EventBus:
                 self._subscribers[event_type] = []
             else:
                 self._subscribers.clear()
+
+
+class EventBusInstance:
+    """
+    EventBus 的单例类
+    """
+    _instance_lock = threading.Lock()
+    _instance: Optional[EventBus] = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            with cls._instance_lock:
+                if not cls._instance:
+                    cls._instance = EventBus()
+        return cls._instance

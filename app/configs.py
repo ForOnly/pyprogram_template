@@ -13,7 +13,7 @@ from typing import Literal, Optional
 import requests
 import yaml
 
-from .event import EventBusInstance, Event
+from .handler import EventBusInstance, Event
 
 CONFIG_IMPORT = "config.imports"
 _EM = EventBusInstance()
@@ -27,7 +27,10 @@ def getpath(path: str, raise_error=True) -> Optional[str]:
     return: str: 资源绝对路径
     """
     if not path:
-        raise ValueError("path can not empty")
+        logging.warning("path is empty")
+        if raise_error:
+            raise ValueError("path is empty")
+        return None
 
     path = os.path.normpath(path)
 
