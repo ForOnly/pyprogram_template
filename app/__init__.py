@@ -15,7 +15,7 @@ DEFAULT_CONFIG_FILE = "env/env.yml"
 
 
 def _init_logger():
-    logpath = ENV.getconfig('log.path', 'logs/app.log')
+    logpath = ENV.getprop('log.path', 'logs/app.log')
     custom_stream_handler = logging.StreamHandler()
     if getattr(sys, 'frozen', False):  # 打包后的环境
         log_path = os.path.join(os.path.dirname(sys.executable), logpath)
@@ -33,7 +33,7 @@ def _init_logger():
     logging.info(f"日志文件路径：{log_path}")
     # 确保日志路径
     logging.basicConfig(
-        level=ENV.getconfig('log.level', logging.INFO),
+        level=ENV.getprop('log.level', logging.INFO),
         format="{asctime} {levelname:>7} {threadName:^10} [{filename}#{funcName}:{lineno}]: {message}",
         style="{",
         encoding='utf-8',
@@ -67,17 +67,16 @@ def _init_config():
 def _init_nacos():
     from .configs import ImportResolver
     from .handler import NacosClient, NacosResolver
-    nacos_clent = NacosClient(server_addresses=ENV.getconfig("nacos.server.server_addresses", raise_error=True),
-                              namespace=ENV.getconfig("nacos.server.namespace"),
-                              username=ENV.getconfig("nacos.server.username", raise_error=True),
-                              password=ENV.getconfig("nacos.server.password", raise_error=True))
+    nacos_clent = NacosClient(server_addresses=ENV.getprop("nacos.server.server_addresses", raise_error=True),
+                              namespace=ENV.getprop("nacos.server.namespace"),
+                              username=ENV.getprop("nacos.server.username", raise_error=True),
+                              password=ENV.getprop("nacos.server.password", raise_error=True))
     ImportResolver.register("nacos", NacosResolver(nacos_clent))
 
 
 def init_app():  # noqa
     _init_logger()
     _init_config()
-    print("初始化完成")
     # _init_nacos()
 
 

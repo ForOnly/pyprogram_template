@@ -4,6 +4,7 @@
 from ._event_handler import Event, Subscriber, EventBus, EventBusInstance
 from ._nacos_handler import NacosClient, NacosResolver, NacosResource
 from ._redis_handler import RedisClient
+from ._types_handler import PropertyDict
 
 __all__ = [
     'NacosClient',
@@ -14,4 +15,5 @@ __all__ = [
     'EventBus',
     'EventBusInstance',
     'RedisClient',
+    'PropertyDict'
 ]
