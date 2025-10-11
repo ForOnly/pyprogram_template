@@ -7,7 +7,7 @@ from typing import Callable, Optional, Dict
 
 import nacos
 
-from app.configs import ConfigDataResource, ConfigDataLocationResolver
+from . import ConfigDataResource, ConfigDataLocationResolver
 
 log = logging.getLogger(__name__)
 

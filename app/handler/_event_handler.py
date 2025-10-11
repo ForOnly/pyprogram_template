@@ -7,6 +7,8 @@ import time
 from collections import defaultdict
 from typing import Any, Dict, Type, List, Callable, Optional
 
+_log = logging.getLogger(__name__)
+
 
 class Event:
     """事件基类，支持携带任意数据"""
@@ -117,7 +119,7 @@ class EventBus:
                 else:
                     sub.callback(event)
             except Exception as e:
-                logging.info(f"[EventBus] error in subscriber {sub.callback}: {e}")
+                _log.info(f"[EventBus] error in subscriber {sub.callback}: {e}")
             if sub.once:
                 subscribers_to_remove.append(sub)
 
