@@ -9,13 +9,13 @@ os.environ["APP_PATH"] = os.getenv('APP_PATH') or os.path.abspath(os.path.dirnam
 
 from app.App import App
 
-App.DEFAULT_LOG_FILE = "logs/app111.log"
+App.DEFAULT_LOG_FILE = "logs/app.log"
 
 
 class AppImpl(App):
     def run(self):
         # start work
-        logging.info("start")
+        logging.info("application startup")
 
 
 if __name__ == '__main__':

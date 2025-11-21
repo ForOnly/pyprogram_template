@@ -2,6 +2,8 @@
 # @author: licanglong
 # @date: 2025/10/11 10:44
 import logging
+import os
+import sys
 import threading
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -9,8 +11,9 @@ from pathlib import Path
 import requests
 import yaml
 
-from ._event_handler import EventBusInstance, Event
-from ._types_handler import PropertyDict
+from app.core import PropertyDict, EventBusInstance, Event
+from app.handler._event_handler import ApplicationStartupEvent
+from app.utils.pathutils import getpath
 
 CONFIG_IMPORT = "config.imports"
 _EM = EventBusInstance()
@@ -189,3 +192,25 @@ def on_register_resolver(event: RegisterResolverEvent):
         else:
             remaining.append(imp)
     ImportResolver.cached_imports = remaining
+
+
+@_EM.subscribe(ApplicationStartupEvent, priority=sys.maxsize - 1)
+def init_config_onstartup(event: ApplicationStartupEvent):
+    """加载并初始化配置"""
+    from app.App import App
+    _APP = App()
+    # 初始配置文件
+    config_path = getpath(_APP.DEFAULT_CONFIG_FILE, raise_error=False)
+    if not os.path.exists(config_path):
+        _log.warning(f"no config file：{_APP.DEFAULT_CONFIG_FILE}")
+        return
+    if getattr(sys, 'frozen', False):
+        extract_config_path = os.path.join(os.path.dirname(sys.executable), _APP.DEFAULT_CONFIG_FILE)
+        # 如果文件不存在，解压并复制到当前工作目录
+        if not os.path.exists(extract_config_path):
+            os.makedirs(os.path.dirname(extract_config_path), exist_ok=True)
+            # 避免权限问题：用二进制读写方式复制
+            with open(config_path, 'rb') as fsrc, open(extract_config_path, 'wb') as fdst:
+                fdst.write(fsrc.read())
+        config_path = extract_config_path
+    _APP.ENV.merge_source(FileResolver().resolve(config_path))

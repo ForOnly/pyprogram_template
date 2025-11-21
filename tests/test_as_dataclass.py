@@ -4,11 +4,13 @@
 from dataclasses import dataclass, field, is_dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Dict, Optional, Union, Set, FrozenSet, Tuple
+from typing import List, Dict, Optional, Union, Set, FrozenSet, Tuple, Generic, TypeVar
 
 import pytest
 
 from app.utils.typeutils import as_dataclass
+
+T = TypeVar('T')
 
 
 # =====================
@@ -88,6 +90,32 @@ def complex_data():
         "Tags": ("engineer", "team-lead"),
         "Join_Date": "2021-04-01T09:00:00"
     }
+
+
+@dataclass
+class DpptResponseData(Generic[T]):
+    code: Optional[str] = None
+    data: Optional[T] = None
+    message: Optional[str] = None
+
+
+@dataclass
+class UserInfo:
+    id: int
+    name: str
+    create_time: Optional[datetime] = None
+
+
+@dataclass
+class DpptResponseError:
+    Message: Optional[str] = None
+
+
+@dataclass
+class DpptResponseResult():
+    RequestId: Optional[str] = None
+    Data: Optional[DpptResponseData[UserInfo]] = None
+    Error: Optional[DpptResponseError] = None
 
 
 # =====================
