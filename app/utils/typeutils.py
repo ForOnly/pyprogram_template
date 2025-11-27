@@ -1,7 +1,7 @@
 # @description: 
 # @author: licanglong
 # @date: 2025/6/9 11:39
-
+import json
 from dataclasses import is_dataclass, fields, MISSING
 from datetime import datetime
 from decimal import Decimal
@@ -172,3 +172,37 @@ def as_dataclass(cls: Type[T], data, ignore_case: bool = True) -> T:
         return _convert_value(cls, data, "root", ignore_case)
 
     return _as_dataclass(cls, data, "root", ignore_case)
+
+
+def asjson(data: dict):
+    """转为 JSON 字符串（QML 最安全）"""
+
+    def datetime_serializable(obj):
+        if isinstance(obj, datetime):
+            return obj.strftime("%Y-%m-%d %H:%M:%S")
+        return None  # 继续下一个规则
+
+    def set_serializable(obj):
+        if isinstance(obj, set):
+            return list(obj)  # 将 set 转换为 list
+        return None
+
+    def default_serializable(obj):
+        # 默认的序列化方式，返回 None 让 json 处理其他类型
+        return None
+
+    # 注册所有序列化规则
+    serializers = {
+        datetime: datetime_serializable,
+        set: set_serializable,
+    }
+
+    # 处理自定义序列化的函数
+    def custom_serializer(obj):
+        # 查找适用的自定义序列化规则
+        for typ, serializer in serializers.items():
+            if isinstance(obj, typ):
+                return serializer(obj)  # 使用对应类型的序列化方法
+        return default_serializable(obj)  # 如果没有找到，则使用默认序列化
+
+    return json.dumps(data, ensure_ascii=False, default=custom_serializer)
