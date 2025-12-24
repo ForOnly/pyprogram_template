@@ -4,25 +4,22 @@
 
 import logging
 import threading
+from abc import ABC, abstractmethod
 from typing import Optional
 
-from app.core import EventBusInstance
-from app.handler import ConfigEnvironmentInstance, ApplicationStartupEvent
+from app.core import EM
+from app.handler import ApplicationStartupEvent
 
 _log = logging.getLogger(__name__)
 
 
-class App:
+class App(ABC):
     """
     app 模块
     """
-    ENV = ConfigEnvironmentInstance()
-    DEFAULT_CONFIG_FILE = "env/env.yml"
-    DEFAULT_LOG_FILE = "logs/app.log"
 
     _instance_lock = threading.Lock()
     _instance: Optional["App"] = None
-    _EM = EventBusInstance()
 
     def __new__(cls):
         if cls._instance is None:
@@ -32,11 +29,12 @@ class App:
         return cls._instance
 
     def startup(self):  # noqa
-        self._EM.emit(ApplicationStartupEvent())
+        EM.emit(ApplicationStartupEvent())
 
-    def run(self):
+    @abstractmethod
+    def run(self, *args, **kwargs):
         pass
 
-    def start(self):
+    def start(self, *args, **kwargs):
         self.startup()
-        self.run()
+        self.run(*args, **kwargs)

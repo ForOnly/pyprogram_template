@@ -7,10 +7,9 @@ import sys
 
 from concurrent_log import ConcurrentTimedRotatingFileHandler
 
-from app.core import EventBusInstance, ColorConsoleFormatter
-from app.handler._event_handler import ApplicationStartupEvent
+from app.core import EM, ColorConsoleFormatter, CTX
+from app.handler.event_handler import ApplicationStartupEvent
 
-_EM = EventBusInstance()
 _log = logging.getLogger(__name__)
 
 custom_stream_handler = logging.StreamHandler()
@@ -26,12 +25,10 @@ logging.basicConfig(
 )
 
 
-@_EM.subscribe(ApplicationStartupEvent, priority=sys.maxsize)
+@EM.subscribe(ApplicationStartupEvent, priority=sys.maxsize)
 def init_logger_onstartup(event: ApplicationStartupEvent):
     """加载并初始化配置"""
-    from app.App import App
-    _APP = App()
-    logpath = _APP.ENV.getprop('log.path', _APP.DEFAULT_LOG_FILE)
+    logpath = CTX.ENV.getprop('log.path', CTX.DEFAULT_LOG_FILE)
     custom_stream_handler = logging.StreamHandler()
     if getattr(sys, 'frozen', False):  # 打包后的环境
         log_path = os.path.join(os.path.dirname(sys.executable), logpath)
@@ -49,7 +46,7 @@ def init_logger_onstartup(event: ApplicationStartupEvent):
     _log.info(f"日志文件路径：{log_path}")
     # 确保日志路径
     logging.basicConfig(
-        level=_APP.ENV.getprop('log.level', logging.DEBUG),
+        level=CTX.ENV.getprop('log.level', logging.DEBUG),
         format="{asctime} {levelname:>7} {threadName:^10} [{filename}#{funcName}:{lineno}]: {message}",
         style="{",
         encoding='utf-8',

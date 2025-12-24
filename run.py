@@ -8,12 +8,13 @@ import os
 os.environ["APP_PATH"] = os.getenv('APP_PATH') or os.path.abspath(os.path.dirname(__file__))  # noqa
 
 from app.App import App
+from app.core import CTX
 
-App.DEFAULT_LOG_FILE = "logs/app.log"
+CTX.DEFAULT_LOG_FILE = "logs/app.log"
 
 
 class AppImpl(App):
-    def run(self):
+    def run(self, *args, **kwargs):
         # start work
         logging.info("application startup")
 

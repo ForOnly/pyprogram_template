@@ -2,18 +2,15 @@
 # @author: licanglong
 # @date: 2025/9/25 14:26
 import logging
-import sys
 import threading
 from typing import Callable, Optional, Dict
 
 import nacos
 
-from app.core import EventBusInstance
-from app.handler._configs_handler import ConfigDataResource, ConfigDataLocationResolver
-from app.handler._event_handler import ApplicationStartupEvent
+from app.core import ConfigDataResource, ConfigDataLocationResolver
+from app.handler.event_handler import ApplicationStartupEvent
 
 log = logging.getLogger(__name__)
-_EM = EventBusInstance()
 
 
 class NacosClient:
@@ -128,14 +125,13 @@ class NacosResolver(ConfigDataLocationResolver):
         return NacosResource(self.client, location)
 
 
-# @_EM.subscribe(ApplicationStartupEvent, priority=sys.maxsize - 2)
+# @EM.subscribe(ApplicationStartupEvent, priority=sys.maxsize - 2)
 def init_nacos_onstartup(event: ApplicationStartupEvent):
     """加载并初始化配置"""
-    from app.App import App
-    from app.handler import NacosClient, NacosResolver, ImportResolver
-    _APP = App()
-    nacos_clent = NacosClient(server_addresses=_APP.ENV.getprop("nacos.server.server_addresses", raise_error=True),
-                              namespace=_APP.ENV.getprop("nacos.server.namespace"),
-                              username=_APP.ENV.getprop("nacos.server.username", raise_error=True),
-                              password=_APP.ENV.getprop("nacos.server.password", raise_error=True))
+    from app.handler import NacosClient, NacosResolver
+    from app.core import ImportResolver, CTX
+    nacos_clent = NacosClient(server_addresses=CTX.ENV.getprop("nacos.server.server_addresses", raise_error=True),
+                              namespace=CTX.ENV.getprop("nacos.server.namespace"),
+                              username=CTX.ENV.getprop("nacos.server.username", raise_error=True),
+                              password=CTX.ENV.getprop("nacos.server.password", raise_error=True))
     ImportResolver.register("nacos", NacosResolver(nacos_clent))

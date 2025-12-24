@@ -155,3 +155,6 @@ class EventBusInstance:
                 if not cls._instance:
                     cls._instance = EventBus()
         return cls._instance
+
+
+EM = EventBusInstance()
